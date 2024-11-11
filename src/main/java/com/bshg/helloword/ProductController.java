@@ -55,7 +55,7 @@ public class ProductController {
             // If product not found, redirect to product list page
             return "redirect:/products";
         }
-        return "product-form";
+        return "update-form";
     }
 
     // Update an existing product
