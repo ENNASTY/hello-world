@@ -2,42 +2,35 @@ pipeline {
     agent any
 
     tools {
-        // Specify JDK version here
-        jdk 'JDK 17'
+        jdk 'JDK 17'  // Ensure this matches the name you configured in Jenkins
     }
 
     environment {
-        // Set any environment variables, e.g., MAVEN_HOME
         MAVEN_OPTS = '-Dmaven.test.failure.ignore=true'
     }
 
     stages {
         stage('Clone') {
             steps {
-                // Cloning the repository
                 git 'https://github.com/hamza-bousalih/hello-world.git'
             }
         }
 
         stage('Build') {
             steps {
-                // Use Maven to clean and package the project
                 sh 'mvn clean package'
             }
         }
 
         stage('Test') {
             steps {
-                // Run tests with Maven
                 sh 'mvn test'
             }
         }
 
         stage('Deploy') {
             steps {
-                // This could be where you deploy the app
                 echo 'Deploying the application...'
-                // Example: running the app locally
                 sh 'java -jar target/*.jar &'
             }
         }
