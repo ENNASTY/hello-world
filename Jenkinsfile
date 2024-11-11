@@ -7,8 +7,8 @@ pipeline {
 
     environment {
         MAVEN_OPTS = '-Dmaven.test.failure.ignore=true'
-        DOCKER_REGISTRY = 'your-dockerhub-username'
-        DOCKER_IMAGE_NAME = 'hello-world'
+        DOCKER_REGISTRY = 'bousalih123'
+        DOCKER_IMAGE_NAME = 'product-bousalih'
         DOCKER_IMAGE_TAG = 'latest'
     }
 
