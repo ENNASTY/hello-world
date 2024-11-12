@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+     tools {
+        maven 'Maven'
+        jdk 'JDK' 
+    }
+
     environment {
         JAVA_HOME = 'C:\\Program Files\\Java\\jdk-19' // Chemin de Java 19 dans votre environnement Jenkins
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
