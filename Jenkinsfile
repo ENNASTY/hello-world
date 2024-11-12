@@ -1,83 +1,87 @@
 pipeline {
     agent any
 
-    tools {
-        jdk 'JDK 19'  
-    }
-
     environment {
-        MAVEN_OPTS = '-Dmaven.test.failure.ignore=true'
-        DOCKER_REGISTRY = 'bousalih123'
-        DOCKER_IMAGE_NAME = 'product-bousalih'
-        DOCKER_IMAGE_TAG = 'latest'
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-19' // Chemin de Java 19 dans votre environnement Jenkins
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
+        SONARQUBE_SERVER = 'SonarQube' // Nom de la configuration SonarQube dans Jenkins
+        DOCKER_IMAGE = 'ennasty/hello-world:latest'  // Nom complet de l'image Docker pour Render
     }
 
     stages {
-        stage('Clone') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/ENNASTY/hello-world.git'
+                // Cloner le code depuis GitHub
+                git url: 'https://github.com/ENNASTY/hello-world.git', branch: 'main'
             }
         }
 
         stage('Build') {
             steps {
-                // Build the project
-                sh 'mvn clean package'
+                // Construire le projet avec Maven en utilisant Java 19
+                sh 'mvn clean package -Djava.home=$JAVA_HOME'
             }
         }
 
-        stage('Test') {
+        stage('SonarQube Analysis') {
             steps {
-                // Run tests
-                sh 'mvn test'
+                // Exécuter SonarQube pour l'analyse de la qualité du code
+                script {
+                    def scannerHome = tool 'SonarQube Scanner'
+                    withSonarQubeEnv(SONARQUBE_SERVER) {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                // Exécuter les tests unitaires avec Maven en utilisant Java 19
+                sh 'mvn test -Djava.home=$JAVA_HOME'
+            }
+            post {
+                always {
+                    // Publier les résultats des tests dans Jenkins
+                    junit '**/target/surefire-reports/*.xml'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    // Build the Docker image
-                    sh """
-                    docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .
-                    """
-                }
+                // Construire l'image Docker
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
-                    // Log in to Docker Hub (ensure Jenkins has credentials set up for Docker Hub)
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    // Connectez-vous à Docker Hub
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh """
                         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-                        docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                        docker push ${DOCKER_IMAGE}
                         """
                     }
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Render') {
             steps {
-                // Optional: Deploy the app using Docker (assuming Docker is used for deployment)
-                echo 'Deploying the application...'
-                sh """
-                docker run -d -p 8080:8080 ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
-                """
+                echo "The Docker image has been pushed to Docker Hub and is ready to be deployed on Render. Deployment on Render must be configured on the Render platform itself."
             }
         }
     }
 
     post {
-        always {
-            echo 'Pipeline finished.'
-        }
         success {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline failed. Check logs for details.'
         }
     }
 }
