@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK 17'  // Ensure this matches the name you configured in Jenkins
+        jdk 'JDK 19'  
     }
 
     environment {
@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                git 'https://github.com/hamza-bousalih/hello-world.git'
+                git 'https://github.com/ENNASTY/hello-world.git'
             }
         }
 
